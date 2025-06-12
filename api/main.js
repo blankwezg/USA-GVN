@@ -22,7 +22,7 @@ module.exports = (req, res) => {
   </style>
 </head>
 <body>
-  <div id="loader" class="screen"><p id="loadText"></p></div>
+  <div id="loader" style="display:block;" ><p id="loadText"></p></div>
   <div id="passcode" class="screen">
     <h1>Authorized Personnel Only – US Federal Documents</h1>
     <input id="codeInput" readonly placeholder="Enter Passcode" /><br>
