@@ -131,28 +131,34 @@ module.exports = (req, res) => {
 
     // Library
     const docs = [
-      {title:'CIA Report (1973)',content:'Full CIA Report content...'},
-      {title:'JFK Report (1979)',content:'Full JFK Report content...'},
-      {title:'NSA Docs (2005)',content:'Full NSA Docs content...'}
+      { title: 'Declassified CIA Report (1973)', content: `REPORT OF THE CENTRAL INTELLIGENCE AGENCY, July 1973
+
+This declassified report covers operations and findings from early Cold War intelligence activities...
+
+[Full CIA Report Text Here]`},
+      { title: 'JFK Select Committee Report (1979)', content: `REPORT OF THE SELECT COMMITTEE ON ASSASSINATIONS, 1979
+
+The Committee investigates the circumstances surrounding the murders of President Kennedy and Dr. Martin Luther King Jr.Â 
+
+[Full JFK Committee Report Here]`},
+      { title: 'NSA Declassified Documents (2005)', content: `NATIONAL SECURITY AGENCY DECLASSIFIED, 2005
+
+Contains records of electronic surveillance and cryptographic analysis from the Vietnam era.
+
+[Full NSA Documents Text Here]`}
     ];
     function showLibrary() {
       const lib = document.getElementById('library');
       lib.style.display='block';
       const list = document.getElementById('list');
+      list.innerHTML = ''; // clear to prevent duplicates
       docs.forEach((d,idx)=>{
-        const li=document.createElement('li'); li.textContent=d.title;
+        const li=document.createElement('li');
+        li.textContent=d.title;
         li.onclick=()=>openDoc(idx);
         list.appendChild(li);
       });
-    }
-
-    // Document viewer
-    function openDoc(idx){
-      document.getElementById('library').style.display='none';
-      const v=document.getElementById('docViewer');
-      document.getElementById('content').textContent = docs[idx].content;
-      v.style.display='block';
-      document.getElementById('back').onclick=()=>{v.style.display='none';showLibrary();};
+    };
     }
   </script>
 </body>
