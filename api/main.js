@@ -29,7 +29,6 @@ module.exports = (req, res) => {
   </style>
 </head>
 <body>
-
   <div id="loader" class="screen"><p id="loadText"></p></div>
   <div id="passcode" class="screen">
     <h1>Authorized Personnel Only – US Federal Documents</h1>
@@ -57,45 +56,107 @@ module.exports = (req, res) => {
       'Initializing Secure Vault...', 'Authenticating Protocols...', 'Decrypting Stored Files...',
       'Validating System Integrity...', 'Fetching Data...', 'Scanning User Agent...', 'Establishing Secure Channel...'
     ];
-    let idx=0; const loadText=document.getElementById('loadText');
+    let idx=0;
+    const loadText=document.getElementById('loadText');
     function showNext(){
-      if(idx<steps.length){ loadText.innerHTML+=steps[idx++]+'<br>'; setTimeout(showNext,800+Math.random()*400);
-      } else { loadText.innerHTML+='<br>System Online. Proceed with authentication.<br>'; setTimeout(()=>{ swap('loader','passcode'); initPass(); },1000); }
+      if(idx<steps.length){
+        loadText.innerHTML+=steps[idx++]+'<br>';
+        setTimeout(showNext,800+Math.random()*400);
+      } else {
+        loadText.innerHTML+='<br>System Online. Proceed with authentication.<br>';
+        setTimeout(()=>{ swap('loader','passcode'); initPass(); },1000);
+      }
     }
     showNext();
 
-    function swap(hideId, showId){ document.getElementById(hideId).style.display='none'; document.getElementById(showId).style.display='block'; }
+    function swap(hideId, showId){
+      document.getElementById(hideId).style.display='none';
+      document.getElementById(showId).style.display='block';
+    }
 
     const correctCode='210866';
-    function initPass(){ const scr=document.getElementById('passcode'), keys=scr.querySelector('.keys'), inp=document.getElementById('codeInput');
-      for(let n=1;n<=9;n++){ let b=document.createElement('div'); b.className='key'; b.textContent=n; b.onclick=()=>inp.value+=n; keys.appendChild(b);}  
-      ['0','T','X'].forEach(c=>{ let b=document.createElement('div'); b.className='key'; b.textContent=c;
+    function initPass(){
+      const scr=document.getElementById('passcode');
+      const keys=scr.querySelector('.keys');
+      const inp=document.getElementById('codeInput');
+      for(let n=1;n<=9;n++){
+        let b=document.createElement('div'); b.className='key'; b.textContent=n;
+        b.onclick=()=>inp.value+=n;
+        keys.appendChild(b);
+      }
+      ['0','T','X'].forEach(c=>{
+        let b=document.createElement('div'); b.className='key'; b.textContent=c;
         if(c==='T') b.onclick=()=>checkPass();
         else if(c==='X') b.onclick=()=>{ inp.value=''; msg(''); };
         else b.onclick=()=>inp.value+=c;
         keys.appendChild(b);
       });
     }
-    function msg(txt){ document.getElementById('passMsg').textContent=txt; }
-    function checkPass(){ const inp=document.getElementById('codeInput'); if(inp.value===correctCode){ msg('Passcode accepted.'); setTimeout(()=>{ swap('passcode','login'); initLogin(); },1000);} else{ msg('Incorrect passcode. Access denied.'); setTimeout(()=>{ msg(''); inp.value=''; },1000);} }
+    function msg(txt){
+      document.getElementById('passMsg').textContent=txt;
+    }
+    function checkPass(){
+      const inp=document.getElementById('codeInput');
+      if(inp.value===correctCode){
+        msg('Passcode accepted.');
+        setTimeout(()=>{ swap('passcode','login'); initLogin(); },1000);
+      } else {
+        msg('Incorrect passcode. Access denied.');
+        setTimeout(()=>{ msg(''); inp.value=''; },1000);
+      }
+    }
 
     const validUser='WilliamFD', validPass='13267709';
-    function initLogin(){ const scr=document.getElementById('login'), keys=scr.querySelector('.keys');
+    function initLogin(){
+      const scr=document.getElementById('login');
+      const keys=scr.querySelector('.keys');
       let loginBtn=document.createElement('div'); loginBtn.className='key'; loginBtn.textContent='L'; loginBtn.onclick=checkLogin;
-      let clearBtn=document.createElement('div'); clearBtn.className='key'; clearBtn.textContent='C'; clearBtn.onclick=()=>{document.getElementById('userInput').value=''; document.getElementById('passInput').value=''; document.getElementById('loginMsg').textContent='';};
-      keys.appendChild(loginBtn); keys.appendChild(clearBtn);
+      let clearBtn=document.createElement('div'); clearBtn.className='key'; clearBtn.textContent='C'; clearBtn.onclick=()=>{
+        document.getElementById('userInput').value='';
+        document.getElementById('passInput').value='';
+        document.getElementById('loginMsg').textContent='';
+      };
+      keys.appendChild(loginBtn);
+      keys.appendChild(clearBtn);
     }
-    function checkLogin(){ const u=document.getElementById('userInput').value, p=document.getElementById('passInput').value, msg=document.getElementById('loginMsg');
-      if(u===validUser && p===validPass){ msg.textContent='Login successful.'; setTimeout(()=>{ swap('login','library'); initLibrary(); },1000);
-      } else { msg.textContent='Unavailable account. Access denied.'; setTimeout(()=>{ msg.textContent=''; },1000); } }
+    function checkLogin(){
+      const u=document.getElementById('userInput').value;
+      const p=document.getElementById('passInput').value;
+      const msg=document.getElementById('loginMsg');
+      if(u===validUser && p===validPass){
+        msg.textContent='Login successful.';
+        setTimeout(()=>{ swap('login','library'); initLibrary(); },1000);
+      } else {
+        msg.textContent='Unavailable account. Access denied.';
+        setTimeout(()=>{ msg.textContent=''; },1000);
+      }
+    }
 
     const docs=[
       {title:'Declassified CIA Report',date:'1973',url:'https://www.foia.cia.gov/sample.pdf'},
       {title:'JFK Select Committee Report',date:'1979',url:'https://www.archives.gov/files/research/jfk/select-committee-report.pdf'},
       {title:'NSA Declassified Documents',date:'2005',url:'https://www.nsa.gov/portals/75/documents/news-features/declassified-documents.pdf'}
     ];
-    function initLibrary(){ const list=document.getElementById('doc-list'); docs.forEach((d,i)=>{ let b=document.createElement('div'); b.className='doc-btn'; b.textContent=`${d.title} (${d.date})`; b.onclick=()=>openDoc(i); list.appendChild(b); }); }
-    function openDoc(i){ document.getElementById('doc-list').style.display='none'; let v=document.getElementById('doc-viewer'); v.style.display='block'; document.getElementById('docFrame').src=docs[i].url; v.querySelector('.back').onclick=()=>{ v.style.display='none'; document.getElementById('doc-list').style.display='block'; }; }
+    function initLibrary(){
+      const list=document.getElementById('doc-list');
+      docs.forEach((d,i)=>{
+        let b=document.createElement('div');
+        b.className='doc-btn';
+        b.textContent=`${d.title} (${d.date})`;
+        b.onclick=()=>openDoc(i);
+        list.appendChild(b);
+      });
+    }
+    function openDoc(i){
+      document.getElementById('doc-list').style.display='none';
+      let v=document.getElementById('doc-viewer');
+      v.style.display='block';
+      document.getElementById('docFrame').src=docs[i].url;
+      v.querySelector('.back').onclick=()=>{
+        v.style.display='none';
+        document.getElementById('doc-list').style.display='block';
+      };
+    }
   </script>
 </body>
 </html>`);
