@@ -129,7 +129,7 @@ module.exports = (req, res) => {
       };
     }
 
-    // Library
+        // Library
     const docs = [
       { title: 'Declassified CIA Report (1973)', content: `REPORT OF THE CENTRAL INTELLIGENCE AGENCY, July 1973
 
@@ -138,7 +138,7 @@ This declassified report covers operations and findings from early Cold War inte
 [Full CIA Report Text Here]`},
       { title: 'JFK Select Committee Report (1979)', content: `REPORT OF THE SELECT COMMITTEE ON ASSASSINATIONS, 1979
 
-The Committee investigates the circumstances surrounding the murders of President Kennedy and Dr. Martin Luther King Jr.Â 
+The Committee investigates the circumstances surrounding the murders of President Kennedy and Dr. Martin Luther King Jr.
 
 [Full JFK Committee Report Here]`},
       { title: 'NSA Declassified Documents (2005)', content: `NATIONAL SECURITY AGENCY DECLASSIFIED, 2005
@@ -151,14 +151,24 @@ Contains records of electronic surveillance and cryptographic analysis from the 
       const lib = document.getElementById('library');
       lib.style.display='block';
       const list = document.getElementById('list');
-      list.innerHTML = ''; // clear to prevent duplicates
-      docs.forEach((d,idx)=>{
-        const li=document.createElement('li');
-        li.textContent=d.title;
-        li.onclick=()=>openDoc(idx);
+      list.innerHTML = ''; // clear duplicates
+      docs.forEach((d, idx) => {
+        const li = document.createElement('li');
+        li.textContent = d.title;
+        li.onclick = () => openDoc(idx);
         list.appendChild(li);
       });
-    };
+    }
+    // Document Viewer
+    function openDoc(idx) {
+      document.getElementById('library').style.display = 'none';
+      const viewer = document.getElementById('docViewer');
+      document.getElementById('content').textContent = docs[idx].content;
+      viewer.style.display = 'block';
+      document.getElementById('back').onclick = () => {
+        viewer.style.display = 'none';
+        showLibrary();
+      };
     }
   </script>
 </body>
