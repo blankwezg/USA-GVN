@@ -149,10 +149,11 @@ module.exports = (req, res) => {
       docs.forEach((d, i) => {
         const btn = document.createElement('div');
         btn.className = 'doc-btn';
-        btn.textContent = `${d.title} (${d.date})`;
+        btn.textContent = d.title + ' (' + d.date + ')';
         btn.onclick = () => openDoc(i);
         list.appendChild(btn);
       });
+      document.getElementById('library').style.display = 'block';
     }
     function openDoc(i) {
       document.getElementById('library').style.display = 'none';
