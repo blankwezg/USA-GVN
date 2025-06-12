@@ -131,21 +131,21 @@ module.exports = (req, res) => {
 
         // Library
     const docs = [
-      { title: 'Declassified CIA Report (1973)', content: `REPORT OF THE CENTRAL INTELLIGENCE AGENCY, July 1973
+      { title: 'Declassified CIA Report (1973)', content: 'REPORT OF THE CENTRAL INTELLIGENCE AGENCY, July 1973
 
 This declassified report covers operations and findings from early Cold War intelligence activities...
 
-[Full CIA Report Text Here]`},
-      { title: 'JFK Select Committee Report (1979)', content: `REPORT OF THE SELECT COMMITTEE ON ASSASSINATIONS, 1979
+[Full CIA Report Text Here]' },
+      { title: 'JFK Select Committee Report (1979)', content: 'REPORT OF THE SELECT COMMITTEE ON ASSASSINATIONS, 1979
 
 The Committee investigates the circumstances surrounding the murders of President Kennedy and Dr. Martin Luther King Jr.
 
-[Full JFK Committee Report Here]`},
-      { title: 'NSA Declassified Documents (2005)', content: `NATIONAL SECURITY AGENCY DECLASSIFIED, 2005
+[Full JFK Committee Report Here]' },
+      { title: 'NSA Declassified Documents (2005)', content: 'NATIONAL SECURITY AGENCY DECLASSIFIED, 2005
 
 Contains records of electronic surveillance and cryptographic analysis from the Vietnam era.
 
-[Full NSA Documents Text Here]`}
+[Full NSA Documents Text Here]' }
     ];
     function showLibrary() {
       const lib = document.getElementById('library');
