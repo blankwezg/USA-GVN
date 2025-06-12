@@ -8,16 +8,16 @@ module.exports = (req, res) => {
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #000; color: #0f0; font-family: monospace; overflow: hidden; }
-    .screen, #library { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; display: none; }
+    .screen { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; display: none; }
     #loader { display: block; width: 80vw; height: 80vh; overflow: auto; }
     #loader p { line-height: 1.5; }
     .keys { margin-top: 20px; }
     .key { display: inline-block; width: 60px; height: 60px; line-height: 60px; margin: 5px; border: 2px solid #0f0; cursor: pointer; user-select: none; font-size: 1.2rem; }
     input[type=text], input[type=password] { width: 200px; height: 30px; text-align: center; background: #000; color: #0f0; border: 2px solid #0f0; font-size: 1.2rem; margin: 10px 0; }
-    #library { display: none; width: 90vw; height: 90vh; padding: 20px; overflow: auto; background: #fff; color: #000; }
+    #library { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90vw; height: 90vh; padding: 20px; overflow: auto; background: #fff; color: #000; }
     #library h1 { margin-bottom: 20px; color: #000; }
     .doc-btn { display: block; width: 100%; padding: 10px; margin: 5px 0; border: 2px solid #0f0; background: #000; color: #0f0; cursor: pointer; text-align: left; font-size: 1rem; }
-    #doc-viewer { display: none; text-align: left; overflow: auto; max-height: 85vh; padding: 10px; border: 2px solid #0f0; background: #000; color: #0f0; }
+    #doc-viewer { display: none; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); width: 80vw; max-height: 80vh; padding: 20px; overflow: auto; border: 2px solid #0f0; background: #000; color: #0f0; }
     #doc-viewer .back { display: inline-block; margin-bottom: 10px; }
   </style>
 </head>
@@ -39,15 +39,23 @@ module.exports = (req, res) => {
   <div id="library">
     <h1>US Federal Document Archive</h1>
     <div id="doc-list"></div>
-    <div id="doc-viewer">
-      <div class="back key">← Back</div>
-      <div id="doc-content"></div>
-    </div>
+  </div>
+  <div id="doc-viewer">
+    <div class="back key">← Back</div>
+    <div id="doc-content"></div>
   </div>
   <script>
-    // Loading
-    const steps = ['Initializing Secure Vault...', 'Authenticating Protocols...', 'Decrypting Stored Files...', 'Validating System Integrity...', 'Fetching Data...', 'Scanning User Agent...', 'Establishing Secure Channel...'];
-    let idx = 0; const loadText = document.getElementById('loadText');
+    const steps = [
+      'Initializing Secure Vault...',
+      'Authenticating Protocols...',
+      'Decrypting Stored Files...',
+      'Validating System Integrity...',
+      'Fetching Data...',
+      'Scanning User Agent...',
+      'Establishing Secure Channel...'
+    ];
+    let idx = 0;
+    const loadText = document.getElementById('loadText');
     function showNext() {
       if (idx < steps.length) {
         loadText.innerHTML += steps[idx++] + '<br>';
@@ -58,48 +66,104 @@ module.exports = (req, res) => {
       }
     }
     showNext();
-    function swap(hide, show) { document.getElementById(hide).style.display = 'none'; document.getElementById(show).style.display = 'block'; }
-    // Passcode
+    function swap(hide, show) {
+      document.getElementById(hide).style.display = 'none';
+      document.getElementById(show).style.display = 'block';
+    }
+
     const correctCode = '210866';
     function initPass() {
       swap('loader','passcode');
-      const keys = document.querySelector('#passcode .keys'); const inp = document.getElementById('codeInput');
-      [1,2,3,4,5,6,7,8,9,0].forEach(n => { const b=document.createElement('div'); b.className='key'; b.textContent=n; b.onclick=()=>inp.value+=n; keys.appendChild(b); });
-      ['T','X'].forEach(c => { const b=document.createElement('div'); b.className='key'; b.textContent=c; b.onclick = c==='T' ? checkPass : () => { inp.value=''; document.getElementById('passMsg').textContent=''; }; keys.appendChild(b); });
+      const keys = document.querySelector('#passcode .keys');
+      const inp = document.getElementById('codeInput');
+      [1,2,3,4,5,6,7,8,9,0].forEach(n => {
+        const b = document.createElement('div');
+        b.className = 'key';
+        b.textContent = n;
+        b.onclick = () => inp.value += n;
+        keys.appendChild(b);
+      });
+      const check = document.createElement('div');
+      check.className = 'key';
+      check.textContent = 'T';
+      check.onclick = checkPass;
+      keys.appendChild(check);
+      const clr = document.createElement('div');
+      clr.className = 'key';
+      clr.textContent = 'X';
+      clr.onclick = () => { inp.value = ''; document.getElementById('passMsg').textContent = ''; };
+      keys.appendChild(clr);
     }
     function checkPass() {
-      const inp = document.getElementById('codeInput'); const msg = document.getElementById('passMsg');
-      if (inp.value === correctCode) { msg.textContent='Passcode accepted.'; setTimeout(()=>{ swap('passcode','login'); initLogin(); },500); }
-      else { msg.textContent='Incorrect passcode. Access denied.'; setTimeout(()=>{ msg.textContent=''; inp.value=''; },500); }
+      const inp = document.getElementById('codeInput');
+      const msg = document.getElementById('passMsg');
+      if (inp.value === correctCode) {
+        msg.textContent = 'Passcode accepted.';
+        setTimeout(() => { swap('passcode','login'); initLogin(); }, 500);
+      } else {
+        msg.textContent = 'Incorrect passcode. Access denied.';
+        setTimeout(() => { msg.textContent = ''; inp.value = ''; }, 500);
+      }
     }
-    // Login
-    const validUser='WilliamFD', validPass='13267709';
+
+    const validUser = 'WilliamFD';
+    const validPass = '13267709';
     function initLogin() {
-      const keys = document.querySelector('#login .keys'); swap('passcode','login');
-      ['L','C'].forEach(c => { const b=document.createElement('div'); b.className='key'; b.textContent=c; b.onclick = () => c==='L' ? checkLogin() : (document.getElementById('userInput').value='',document.getElementById('passInput').value='',document.getElementById('loginMsg').textContent=''); keys.appendChild(b); });
+      swap('passcode','login');
+      const keys = document.querySelector('#login .keys');
+      const loginBtn = document.createElement('div');
+      loginBtn.className = 'key';
+      loginBtn.textContent = 'L';
+      loginBtn.onclick = checkLogin;
+      keys.appendChild(loginBtn);
+      const clearBtn = document.createElement('div');
+      clearBtn.className = 'key';
+      clearBtn.textContent = 'C';
+      clearBtn.onclick = () => {
+        document.getElementById('userInput').value = '';
+        document.getElementById('passInput').value = '';
+        document.getElementById('loginMsg').textContent = '';
+      };
+      keys.appendChild(clearBtn);
     }
     function checkLogin() {
-      const u=document.getElementById('userInput').value, p=document.getElementById('passInput').value, msg=document.getElementById('loginMsg');
-      if(u===validUser && p===validPass) { msg.textContent='Login successful.'; setTimeout(()=>{ swap('login','library'); initLibrary(); },500); }
-      else { msg.textContent='Unavailable account. Access denied.'; setTimeout(()=>msg.textContent='',500); }
+      const u = document.getElementById('userInput').value;
+      const p = document.getElementById('passInput').value;
+      const msg = document.getElementById('loginMsg');
+      if (u === validUser && p === validPass) {
+        msg.textContent = 'Login successful.';
+        setTimeout(() => { swap('login','library'); initLibrary(); }, 500);
+      } else {
+        msg.textContent = 'Unavailable account. Access denied.';
+        setTimeout(() => { msg.textContent = ''; }, 500);
+      }
     }
-    // Library
-    const docs=[
-      {title:'Declassified CIA Report',date:'1973',content:`Full text of Declassified CIA Report (1973)...\nLorem ipsum dolor sit amet, consectetur adipiscing elit.`},
-      {title:'JFK Select Committee Report',date:'1979',content:`Full text of JFK Select Committee Report (1979)...\nSed do eiusmod tempor incididunt ut labore et dolore magna aliqua.`},
-      {title:'NSA Declassified Documents',date:'2005',content:`Full text of NSA Declassified Documents (2005)...\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris.`}
+
+    const docs = [
+      { title: 'Declassified CIA Report', date: '1973', content: 'Full text of Declassified CIA Report (1973)...\nLorem ipsum dolor sit amet, consectetur adipiscing elit.' },
+      { title: 'JFK Select Committee Report', date: '1979', content: 'Full text of JFK Select Committee Report (1979)...\nSed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' },
+      { title: 'NSA Declassified Documents', date: '2005', content: 'Full text of NSA Declassified Documents (2005)...\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris.' }
     ];
     function initLibrary() {
       const list = document.getElementById('doc-list');
-      docs.forEach((d,i)=>{
-        const btn = document.createElement('div'); btn.className='doc-btn'; btn.textContent=d.title+' ('+d.date+')'; btn.onclick=()=>openDoc(i);
+      docs.forEach((d, i) => {
+        const btn = document.createElement('div');
+        btn.className = 'doc-btn';
+        btn.textContent = `${d.title} (${d.date})`;
+        btn.onclick = () => openDoc(i);
         list.appendChild(btn);
       });
-      document.getElementById('library').style.display='block';
     }
     function openDoc(i) {
-      document.getElementById('doc-list').style.display='none'; const v=document.getElementById('doc-viewer'); const c=document.getElementById('doc-content');
-      c.textContent = docs[i].content; v.style.display='block'; document.querySelector('#doc-viewer .back').onclick=()=>{ v.style.display='none'; document.getElementById('doc-list').style.display='block'; };
+      document.getElementById('library').style.display = 'none';
+      const viewer = document.getElementById('doc-viewer');
+      const content = document.getElementById('doc-content');
+      content.textContent = docs[i].content;
+      viewer.style.display = 'block';
+      viewer.querySelector('.back').onclick = () => {
+        viewer.style.display = 'none';
+        document.getElementById('library').style.display = 'block';
+      };
     }
   </script>
 </body>
