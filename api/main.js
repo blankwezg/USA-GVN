@@ -8,13 +8,18 @@ module.exports = (req, res) => {
   <title>US Federal Document Archive</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #000; color: #0f0; font-family: monospace; /* allow scrolling for loader */ }
-    /* LOADER */
+    body { background: #000; color: #0f0; font-family: monospace; overflow: auto; }
+    /* LOADER full screen */
     #loader {
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 80vw; max-height: 80vh; overflow: auto;
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      overflow: auto;
+      background: #000;
+      color: #0f0;
+      padding: 20px;
     }
-    #loader p { line-height: 1.5; }
+    #loader p { line-height: 1.5; white-space: pre-wrap; }
     /* HIDDEN SCREENS */
     .screen { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
     .keys { margin-top: 20px; }
@@ -85,10 +90,10 @@ module.exports = (req, res) => {
       const loadText = document.getElementById('loadText');
       function showNext() {
         if (idx < steps.length) {
-          loadText.innerHTML += steps[idx++] + '<br>';
+          loadText.innerHTML += steps[idx++] + '\n';
           setTimeout(showNext, 800 + Math.random() * 400);
         } else {
-          loadText.innerHTML += '<br>System Online. Proceed with authentication.<br>';
+          loadText.innerHTML += '\nSystem Online. Proceed with authentication.\n';
           setTimeout(() => { document.getElementById('loader').style.display = 'none'; initPass(); }, 1000);
         }
       }
