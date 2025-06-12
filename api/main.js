@@ -7,103 +7,159 @@ module.exports = (req, res) => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>US Federal Document Archive</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #000; color: #0f0; font-family: monospace; overflow: auto; }
-    #loader { display: block; width: 100vw; height: 100vh; overflow: auto; background: #000; color: #0f0; padding: 20px; }
-    #loader p { line-height: 1.5; white-space: pre-wrap; }
-    .screen { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
-    .keys { margin-top: 20px; }
-    .key { display: inline-block; width: 60px; height: 60px; line-height: 60px; margin: 5px; border: 2px solid #0f0; cursor: pointer; user-select: none; font-size: 1.2rem; }
-    input[type=text], input[type=password] { width: 200px; height: 30px; text-align: center; background: #000; color: #0f0; border: 2px solid #0f0; font-size: 1.2rem; margin: 10px 0; }
-    #library { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90vw; height: 90vh; overflow: auto; background: #fff; color: #000; padding: 20px; }
-    #library h1 { margin-bottom: 20px; }
-    .doc-btn { display: block; width: 100%; padding: 10px; margin: 5px 0; background: #000; color: #0f0; border: 2px solid #0f0; cursor: pointer; text-align: left; }
-    #doc-viewer { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80vw; max-height: 80vh; overflow: auto; background: #000; color: #0f0; border: 2px solid #0f0; padding: 20px; }
-    #doc-viewer .back { display: inline-block; margin-bottom: 10px; }
+    /* Full screen black background */
+    html, body { margin:0; padding:0; width:100%; height:100%; background:#000; color:#0f0; font-family:monospace; }
+    /* Loader container */
+    #loader { position:fixed; top:0; left:0; width:100%; height:100%; overflow-y:auto; padding:20px; }
+    #loader div { margin-bottom:5px; }
+    /* Centered modals */
+    .modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#000; border:2px solid #0f0; padding:20px; width:80vw; max-width:400px; }
+    .modal h2 { margin-bottom:15px; }
+    .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; }
+    .btn { background:#000; border:2px solid #0f0; color:#0f0; padding:10px; text-align:center; cursor:pointer; }
+    input { width:100%; padding:8px; margin:5px 0; background:#000; border:2px solid #0f0; color:#0f0; }
+    /* Library and viewer */
+    #library, #docViewer { display:none; position:fixed; top:5%; left:5%; right:5%; bottom:5%; background:#000; overflow:auto; padding:20px; border:2px solid #0f0; }
+    #library li { margin:10px 0; cursor:pointer; }
+    #back { margin-bottom:10px; cursor:pointer; }
   </style>
 </head>
 <body>
-  <div id="loader"><p id="loadText"></p></div>
-  <div id="passcode" class="screen">
-    <h1>Authorized Personnel Only – US Federal Documents</h1>
-    <input id="codeInput" readonly placeholder="Enter Passcode" /><br>
-    <div class="keys"></div>
-    <p id="passMsg"></p>
+  <!-- Loader -->
+  <div id="loader"></div>
+
+  <!-- Passcode Modal -->
+  <div id="passcode" class="modal">
+    <h2>Enter Passcode</h2>
+    <input id="code" placeholder="Passcode" readonly />
+    <div class="grid" id="passGrid"></div>
+    <div id="passMsg"></div>
   </div>
-  <div id="login" class="screen">
-    <h1>Secure User Login</h1>
-    <input id="userInput" type="text" placeholder="Username" /><br>
-    <input id="passInput" type="password" placeholder="Password" /><br>
-    <div class="keys"></div>
-    <p id="loginMsg"></p>
+
+  <!-- Login Modal -->
+  <div id="login" class="modal">
+    <h2>Login</h2>
+    <input id="user" placeholder="Username" />
+    <input id="pass" type="password" placeholder="Password" />
+    <div class="btn" id="loginBtn">Login</div>
+    <div id="loginMsg"></div>
   </div>
+
+  <!-- Library -->
   <div id="library">
-    <h1>US Federal Document Archive</h1>
-    <div id="doc-list"></div>
+    <h2>Document Archive</h2>
+    <ul id="list"></ul>
   </div>
-  <div id="doc-viewer">
-    <div class="back key">← Back</div>
-    <div id="doc-content"></div>
+
+  <!-- Document Viewer -->
+  <div id="docViewer">
+    <div id="back" class="btn">← Back</div>
+    <pre id="content"></pre>
   </div>
+
   <script>
-    // Loading animation
-    const steps = ['Initializing Secure Vault...', 'Authenticating Protocols...', 'Decrypting Stored Files...', 'Validating System Integrity...', 'Fetching Data...', 'Scanning User Agent...', 'Establishing Secure Channel...'];
-    let idx = 0;
-    const loadText = document.getElementById('loadText');
-    function showNext() {
-      if (idx < steps.length) {
-        loadText.innerHTML += steps[idx++] + '<br>';
-        setTimeout(showNext, 800 + Math.random() * 400);
+    // Steps to load
+    const steps = [
+      'Initializing Secure Vault...',
+      'Authenticating...',
+      'Decrypting Files...',
+      'Validating...',
+      'Fetching Data...',
+      'Finalizing...'
+    ];
+    const loader = document.getElementById('loader');
+    let i = 0;
+    function step() {
+      if (i < steps.length) {
+        const d = document.createElement('div');
+        d.textContent = steps[i++];
+        loader.appendChild(d);
+        setTimeout(step, 700);
       } else {
-        loadText.innerHTML += '<br>System Online. Proceed with authentication.<br>';
-        setTimeout(() => { document.getElementById('loader').style.display = 'none'; initPass(); }, 1000);
+        setTimeout(() => initPasscode(), 500);
       }
     }
-    // Start immediately
-    showNext();
+    step();
 
-    function swap(hideId, showId) {
-      document.getElementById(hideId).style.display = 'none';
-      document.getElementById(showId).style.display = 'block';
-    }
-
-    const correctCode = '210866';
-    function initPass() {
-      swap('loader','passcode');
-      const keys = document.querySelector('#passcode .keys');
-      const inp = document.getElementById('codeInput');
-      [1,2,3,4,5,6,7,8,9,0].forEach(n => {
-        const b = document.createElement('div'); b.className = 'key'; b.textContent = n; b.onclick = () => inp.value += n; keys.appendChild(b);
-      });
-      ['T','X'].forEach(c => {
-        const b = document.createElement('div'); b.className = 'key'; b.textContent = c;
-        b.onclick = () => c==='T'?checkPass():(inp.value='',document.getElementById('passMsg').textContent='');
-        keys.appendChild(b);
+    // Passcode
+    const PASS='210866';
+    function initPasscode() {
+      loader.style.display='none';
+      const modal = document.getElementById('passcode');
+      modal.style.display='block';
+      const grid = document.getElementById('passGrid');
+      ['1','2','3','4','5','6','7','8','9','0','C','OK'].forEach(x=>{
+        const b=document.createElement('div');b.className='btn';b.textContent=x;
+        b.onclick=()=>{
+          const inp=document.getElementById('code');
+          if(x==='C') inp.value='';
+          else if(x==='OK') verifyPass();
+          else inp.value+=x;
+        };
+        grid.appendChild(b);
       });
     }
-    function checkPass() {
-      const inp = document.getElementById('codeInput');
+    function verifyPass() {
+      const val = document.getElementById('code').value;
       const msg = document.getElementById('passMsg');
-      if (inp.value===correctCode) { msg.textContent='Passcode accepted.'; setTimeout(()=>{swap('passcode','login');initLogin();},500);} 
-      else { msg.textContent='Incorrect passcode. Access denied.'; setTimeout(()=>{msg.textContent='';inp.value='';},500); }
+      if(val===PASS) {
+        msg.textContent='Access Granted';
+        setTimeout(()=>{
+          document.getElementById('passcode').style.display='none';
+          initLogin();
+        },500);
+      } else msg.textContent='Denied';
     }
 
-    const validUser='WilliamFD', validPass='13267709';
+    // Login
     function initLogin() {
-      swap('passcode','login');
-      const keys=document.querySelector('#login .keys');
-      [{c:'L',fn:checkLogin},{c:'C',fn:()=>{document.getElementById('userInput').value='';document.getElementById('passInput').value='';document.getElementById('loginMsg').textContent='';}}]
-      .forEach(o=>{const b=document.createElement('div');b.className='key';b.textContent=o.c;b.onclick=o.fn;keys.appendChild(b);});
-    }
-    function checkLogin() {
-      const u=document.getElementById('userInput').value,p=document.getElementById('passInput').value,msgElm=document.getElementById('loginMsg');
-      if(u===validUser&&p===validPass){msgElm.textContent='Login successful.';setTimeout(()=>{swap('login','library');initLibrary();},500);} 
-      else {msgElm.textContent='Unavailable account. Access denied.';setTimeout(()=>{msgElm.textContent='';},500);}  
+      const modal = document.getElementById('login');
+      modal.style.display='block';
+      document.getElementById('loginBtn').onclick = ()=>{
+        const u=document.getElementById('user').value;
+        const p=document.getElementById('pass').value;
+        const msg=document.getElementById('loginMsg');
+        if(u==='WilliamFD' && p==='13267709') {
+          msg.textContent='Welcome';
+          setTimeout(()=>{
+            modal.style.display='none';
+            showLibrary();
+          },500);
+        } else msg.textContent='Invalid';
+      };
     }
 
-    const docs=[{title:'Declassified CIA Report',date:'1973',content:'Full text of Declassified CIA Report (1973)...\nLorem ipsum.'},{title:'JFK Select Committee Report',date:'1979',content:'Full text of JFK Select Committee Report (1979)...\nSed do eiusmod.'},{title:'NSA Declassified Documents',date:'2005',content:'Full text of NSA Declassified Documents (2005)...\nUt enim ad minim.'}];
-    function initLibrary(){const list=document.getElementById('doc-list');docs.forEach((d,i)=>{const btn=document.createElement('div');btn.className='doc-btn';btn.textContent=d.title+' ('+d.date+')';btn.onclick=()=>openDoc(i);list.appendChild(btn);});document.getElementById('library').style.display='block';}
-    function openDoc(i){swap('library','doc-viewer');document.getElementById('doc-content').textContent=docs[i].content;document.querySelector('#doc-viewer .back').onclick=()=>swap('doc-viewer','library');}
+    // Library
+    const docs = [
+      { title: 'Declassified CIA Report (1973)', content: `REPORT OF THE CENTRAL INTELLIGENCE AGENCY, July 1973
+
+This declassified report covers operations and findings from early Cold War intelligence activities...
+
+[Full CIA Report Text Here]`},
+      { title: 'JFK Select Committee Report (1979)', content: `REPORT OF THE SELECT COMMITTEE ON ASSASSINATIONS, 1979
+
+The Committee investigates the circumstances surrounding the murders of President Kennedy and Dr. Martin Luther King Jr.Â 
+
+[Full JFK Committee Report Here]`},
+      { title: 'NSA Declassified Documents (2005)', content: `NATIONAL SECURITY AGENCY DECLASSIFIED, 2005
+
+Contains records of electronic surveillance and cryptographic analysis from the Vietnam era.
+
+[Full NSA Documents Text Here]`}
+    ];
+    function showLibrary() {
+      const lib = document.getElementById('library');
+      lib.style.display='block';
+      const list = document.getElementById('list');
+      list.innerHTML = ''; // clear to prevent duplicates
+      docs.forEach((d,idx)=>{
+        const li=document.createElement('li');
+        li.textContent=d.title;
+        li.onclick=()=>openDoc(idx);
+        list.appendChild(li);
+      });
+    };
+    }
   </script>
 </body>
 </html>`);
