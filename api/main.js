@@ -3,154 +3,107 @@ module.exports = (req, res) => {
   res.send(`<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>US Federal Document Archive</title>
   <style>
-    /* Basic Reset */
-    * { margin:0; padding:0; box-sizing:border-box; }
-    html, body { width:100%; height:100%; overflow:hidden; background:#000; color:#0f0; font-family:monospace; }
-    /* Fullscreen loader */
-    #loader { position:fixed; top:0; left:0; width:100%; height:100%; background:#000; padding:20px; overflow:auto; }
-    #loader p { white-space: pre-wrap; line-height:1.5; }
-    /* Centered modal screens */
-    .modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#000; padding:20px; border:2px solid #0f0; }
-    /* Buttons grid */
-    .grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-top:15px; }
-    .btn { background:#000; color:#0f0; border:2px solid #0f0; padding:15px; text-align:center; cursor:pointer; }
-    /* Text inputs */
-    input { background:#000; color:#0f0; border:2px solid #0f0; padding:8px; width:200px; margin:5px 0; }
-    /* Library list */
-    #library { display:none; position:fixed; top:5%; left:5%; right:5%; bottom:5%; background:#000; overflow:auto; padding:20px; border:2px solid #0f0; }
-    #library h1 { margin-bottom:10px; }
-    .doc-list { list-style:none; }
-    .doc-list li { margin:10px 0; cursor:pointer; }
-    /* Doc viewer */
-    #docViewer { display:none; position:fixed; top:5%; left:5%; right:5%; bottom:5%; background:#000; overflow:auto; padding:20px; border:2px solid #0f0; }
-    #docViewer .back { margin-bottom:10px; cursor:pointer; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; color: #0f0; font-family: monospace; overflow: auto; }
+    #loader { display: block; width: 100vw; height: 100vh; overflow: auto; background: #000; color: #0f0; padding: 20px; }
+    #loader p { line-height: 1.5; white-space: pre-wrap; }
+    .screen { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+    .keys { margin-top: 20px; }
+    .key { display: inline-block; width: 60px; height: 60px; line-height: 60px; margin: 5px; border: 2px solid #0f0; cursor: pointer; user-select: none; font-size: 1.2rem; }
+    input[type=text], input[type=password] { width: 200px; height: 30px; text-align: center; background: #000; color: #0f0; border: 2px solid #0f0; font-size: 1.2rem; margin: 10px 0; }
+    #library { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90vw; height: 90vh; overflow: auto; background: #fff; color: #000; padding: 20px; }
+    #library h1 { margin-bottom: 20px; }
+    .doc-btn { display: block; width: 100%; padding: 10px; margin: 5px 0; background: #000; color: #0f0; border: 2px solid #0f0; cursor: pointer; text-align: left; }
+    #doc-viewer { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80vw; max-height: 80vh; overflow: auto; background: #000; color: #0f0; border: 2px solid #0f0; padding: 20px; }
+    #doc-viewer .back { display: inline-block; margin-bottom: 10px; }
   </style>
 </head>
 <body>
-  <!-- LOADER -->
   <div id="loader"><p id="loadText"></p></div>
-
-  <!-- PASSCODE -->
-  <div id="passcode" class="modal">
-    <h2>Enter Security Passcode</h2>
-    <input id="codeInput" type="password" placeholder="Passcode"><br>
-    <div class="grid" id="passKeys"></div>
-    <div id="passMsg"></div>
+  <div id="passcode" class="screen">
+    <h1>Authorized Personnel Only – US Federal Documents</h1>
+    <input id="codeInput" readonly placeholder="Enter Passcode" /><br>
+    <div class="keys"></div>
+    <p id="passMsg"></p>
   </div>
-
-  <!-- LOGIN -->
-  <div id="login" class="modal">
-    <h2>User Login</h2>
-    <input id="userInput" type="text" placeholder="Username"><br>
-    <input id="passInput" type="password" placeholder="Password"><br>
-    <div class="btn" id="loginBtn">Login</div>
-    <div id="loginMsg" style="margin-top:10px;"></div>
+  <div id="login" class="screen">
+    <h1>Secure User Login</h1>
+    <input id="userInput" type="text" placeholder="Username" /><br>
+    <input id="passInput" type="password" placeholder="Password" /><br>
+    <div class="keys"></div>
+    <p id="loginMsg"></p>
   </div>
-
-  <!-- LIBRARY -->
   <div id="library">
-    <h1>Document Archive</h1>
-    <ul class="doc-list" id="docList"></ul>
+    <h1>US Federal Document Archive</h1>
+    <div id="doc-list"></div>
   </div>
-
-  <!-- DOC VIEWER -->
-  <div id="docViewer">
-    <div class="back btn" id="backBtn">&larr; Back</div>
-    <div id="docContent"></div>
+  <div id="doc-viewer">
+    <div class="back key">← Back</div>
+    <div id="doc-content"></div>
   </div>
-
   <script>
-    // Utility
-    const createKeys = (container, symbols, handler) => {
-      symbols.forEach(s => {
-        const b = document.createElement('div'); b.className='btn'; b.textContent=s;
-        b.onclick = () => handler(s);
-        container.appendChild(b);
-      });
-    };
-
-    // 1) LOADING
-    const steps = [
-      'Initializing Secure Vault...',
-      'Authenticating Protocols...',
-      'Decrypting Stored Files...',
-      'Validating System Integrity...',
-      'Fetching Data...',
-      'Scanning Environment...',
-      'Encrypting Channels...'
-    ];
+    // Loading animation
+    const steps = ['Initializing Secure Vault...', 'Authenticating Protocols...', 'Decrypting Stored Files...', 'Validating System Integrity...', 'Fetching Data...', 'Scanning User Agent...', 'Establishing Secure Channel...'];
     let idx = 0;
     const loadText = document.getElementById('loadText');
-    (function load(){
-      if(idx < steps.length) {
-        loadText.textContent += steps[idx++] + '\n';
-        setTimeout(load, 500 + Math.random()*500);
+    function showNext() {
+      if (idx < steps.length) {
+        loadText.innerHTML += steps[idx++] + '<br>';
+        setTimeout(showNext, 800 + Math.random() * 400);
       } else {
-        loadText.textContent += '\nComplete.\nRedirecting...';
-        setTimeout(()=>{
-          document.getElementById('loader').style.display='none';
-          showPasscode();
-        },1000);
+        loadText.innerHTML += '<br>System Online. Proceed with authentication.<br>';
+        setTimeout(() => { document.getElementById('loader').style.display = 'none'; initPass(); }, 1000);
       }
-    })();
+    }
+    // Start immediately
+    showNext();
 
-    // 2) PASSCODE SCREEN
-    const PASS = '210866';
-    function showPasscode(){
-      document.getElementById('passcode').style.display='block';
-      createKeys(document.getElementById('passKeys'), ['1','2','3','4','5','6','7','8','9','0','C','OK'], key=>{
-        const inp = document.getElementById('codeInput');
-        if(key==='C') inp.value = '';
-        else if(key==='OK') checkPasscode();
-        else inp.value += key;
+    function swap(hideId, showId) {
+      document.getElementById(hideId).style.display = 'none';
+      document.getElementById(showId).style.display = 'block';
+    }
+
+    const correctCode = '210866';
+    function initPass() {
+      swap('loader','passcode');
+      const keys = document.querySelector('#passcode .keys');
+      const inp = document.getElementById('codeInput');
+      [1,2,3,4,5,6,7,8,9,0].forEach(n => {
+        const b = document.createElement('div'); b.className = 'key'; b.textContent = n; b.onclick = () => inp.value += n; keys.appendChild(b);
+      });
+      ['T','X'].forEach(c => {
+        const b = document.createElement('div'); b.className = 'key'; b.textContent = c;
+        b.onclick = () => c==='T'?checkPass():(inp.value='',document.getElementById('passMsg').textContent='');
+        keys.appendChild(b);
       });
     }
-    function checkPasscode(){
-      const inp = document.getElementById('codeInput'), msg = document.getElementById('passMsg');
-      if(inp.value===PASS){ msg.textContent='Access Granted'; setTimeout(()=>{document.getElementById('passcode').style.display='none';showLogin();},500);} 
-      else { msg.textContent='Denied'; inp.value=''; }
+    function checkPass() {
+      const inp = document.getElementById('codeInput');
+      const msg = document.getElementById('passMsg');
+      if (inp.value===correctCode) { msg.textContent='Passcode accepted.'; setTimeout(()=>{swap('passcode','login');initLogin();},500);} 
+      else { msg.textContent='Incorrect passcode. Access denied.'; setTimeout(()=>{msg.textContent='';inp.value='';},500); }
     }
 
-    // 3) LOGIN
-    const USER='WilliamFD', PWD='13267709';
-    function showLogin(){
-      document.getElementById('login').style.display='block';
-      document.getElementById('loginBtn').onclick = ()=>{
-        const u=document.getElementById('userInput').value;
-        const p=document.getElementById('passInput').value;
-        const msg=document.getElementById('loginMsg');
-        if(u===USER && p===PWD) { msg.textContent='Welcome'; setTimeout(()=>{document.getElementById('login').style.display='none';showLibrary();},500);} 
-        else msg.textContent='Invalid';
-      };
+    const validUser='WilliamFD', validPass='13267709';
+    function initLogin() {
+      swap('passcode','login');
+      const keys=document.querySelector('#login .keys');
+      [{c:'L',fn:checkLogin},{c:'C',fn:()=>{document.getElementById('userInput').value='';document.getElementById('passInput').value='';document.getElementById('loginMsg').textContent='';}}]
+      .forEach(o=>{const b=document.createElement('div');b.className='key';b.textContent=o.c;b.onclick=o.fn;keys.appendChild(b);});
+    }
+    function checkLogin() {
+      const u=document.getElementById('userInput').value,p=document.getElementById('passInput').value,msgElm=document.getElementById('loginMsg');
+      if(u===validUser&&p===validPass){msgElm.textContent='Login successful.';setTimeout(()=>{swap('login','library');initLibrary();},500);} 
+      else {msgElm.textContent='Unavailable account. Access denied.';setTimeout(()=>{msgElm.textContent='';},500);}  
     }
 
-    // 4) LIBRARY
-    const docs = [
-      { title:'Declassified CIA Report (1973)', content:'Full CIA Report...'},
-      { title:'JFK Select Committee (1979)', content:'Full JFK Report...'},
-      { title:'NSA Declassified (2005)', content:'Full NSA Documents...'}
-    ];
-    function showLibrary(){
-      const list = document.getElementById('docList');
-      docs.forEach((d,i)=>{
-        const li = document.createElement('li'); li.textContent=d.title;
-        li.onclick = ()=> showDoc(i);
-        list.appendChild(li);
-      });
-      document.getElementById('library').style.display='block';
-    }
-
-    // 5) DOCUMENT VIEWER
-    function showDoc(i){
-      document.getElementById('library').style.display='none';
-      const dv = document.getElementById('docViewer'); dv.style.display='block';
-      document.getElementById('docContent').textContent = docs[i].content;
-      document.getElementById('backBtn').onclick = ()=>{ dv.style.display='none'; document.getElementById('library').style.display='block'; };
-    }
+    const docs=[{title:'Declassified CIA Report',date:'1973',content:'Full text of Declassified CIA Report (1973)...\nLorem ipsum.'},{title:'JFK Select Committee Report',date:'1979',content:'Full text of JFK Select Committee Report (1979)...\nSed do eiusmod.'},{title:'NSA Declassified Documents',date:'2005',content:'Full text of NSA Declassified Documents (2005)...\nUt enim ad minim.'}];
+    function initLibrary(){const list=document.getElementById('doc-list');docs.forEach((d,i)=>{const btn=document.createElement('div');btn.className='doc-btn';btn.textContent=d.title+' ('+d.date+')';btn.onclick=()=>openDoc(i);list.appendChild(btn);});document.getElementById('library').style.display='block';}
+    function openDoc(i){swap('library','doc-viewer');document.getElementById('doc-content').textContent=docs[i].content;document.querySelector('#doc-viewer .back').onclick=()=>swap('doc-viewer','library');}
   </script>
 </body>
 </html>`);
