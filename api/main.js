@@ -11,6 +11,7 @@ module.exports = (req, res) => {
     body { background: #000; color: #0f0; font-family: monospace; overflow: auto; }
     /* LOADER full screen */
     #loader {
+      z-index: 1000;
       display: block;
       width: 100vw;
       height: 100vh;
@@ -90,10 +91,10 @@ module.exports = (req, res) => {
       const loadText = document.getElementById('loadText');
       function showNext() {
         if (idx < steps.length) {
-          loadText.innerHTML += steps[idx++] + '\n';
+          loadText.innerHTML += steps[idx++] + '<br>';
           setTimeout(showNext, 800 + Math.random() * 400);
         } else {
-          loadText.innerHTML += '\nSystem Online. Proceed with authentication.\n';
+          loadText.innerHTML += '<br>System Online. Proceed with authentication.<br>';
           setTimeout(() => { document.getElementById('loader').style.display = 'none'; initPass(); }, 1000);
         }
       }
